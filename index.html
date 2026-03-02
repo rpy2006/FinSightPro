@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinSight Pro — Financial Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --bg:        #080b0f;
+  --surface:   #0d1117;
+  --card:      #111820;
+  --card2:     #141d26;
+  --border:    #1c2535;
+  --border2:   #243040;
+  --gold:      #c8a84b;
+  --gold-lt:   #e6c96a;
+  --gold-dk:   #6b5520;
+  --cyan:      #4db8f0;
+  --green:     #3ecf82;
+  --red:       #f05252;
+  --amber:     #f0a030;
+  --purple:    #9b7fe8;
+  --text:      #e2e8f0;
+  --mid:       #7a8fa8;
+  --dim:       #3d5068;
+  --mono:      'IBM Plex Mono', monospace;
+  --serif:     'DM Serif Display', serif;
+  --sans:      'DM Sans', sans-serif;
+  --radius:    6px;
+  --sidebar-w: 230px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+button{cursor:pointer;font-family:var(--sans)}
+table{border-collapse:collapse;width:100%}
+a{color:inherit;text-decoration:none}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  transition:transform .3s ease;
+  z-index:100;
+}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.content{flex:1;padding:28px 32px;min-height:0}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;backdrop-filter:blur(2px)}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+.sb-logo{padding:20px;border-bottom:1px solid var(--border)}
+.sb-logo-name{font-family:var(--serif);font-size:1.2rem;color:var(--gold);letter-spacing:-.01em}
+.sb-logo-ver{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.08em;margin-top:3px}
+.sb-company{padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(200,168,75,.04)}
+.sb-company-name{font-size:12px;font-weight:600;color:var(--text)}
+.sb-company-sub{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:2px}
+.sb-nav{flex:1;padding:6px 0;overflow-y:auto}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all .15s ease;color:var(--mid);
+  font-size:12.5px;user-select:none;
+}
+.nav-item:hover{color:var(--text);background:rgba(200,168,75,.04);border-left-color:var(--gold-dk)}
+.nav-item.active{color:var(--gold-lt);background:rgba(200,168,75,.08);border-left-color:var(--gold)}
+.nav-icon{font-size:13px;opacity:.8;min-width:16px}
+.sb-footer{padding:14px 20px;border-top:1px solid var(--border)}
+.live-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sb-footer-text{font-family:var(--mono);font-size:9px;color:var(--dim)}
+
+/* ═══════════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════════ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;border-bottom:1px solid var(--border);
+  background:var(--surface);flex-shrink:0;gap:12px;
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.hamburger{display:none;background:none;border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--mid)}
+.hamburger:hover{border-color:var(--gold);color:var(--gold)}
+.topbar-title{font-family:var(--serif);font-size:1rem;color:var(--text)}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.badge-live{display:flex;align-items:center;gap:5px;background:rgba(62,207,130,.08);border:1px solid rgba(62,207,130,.2);border-radius:20px;padding:4px 10px;font-family:var(--mono);font-size:10px;color:var(--green)}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn{padding:7px 16px;border-radius:var(--radius);font-size:12px;font-weight:500;transition:all .15s;border:none;font-family:var(--sans)}
+.btn-gold{background:var(--gold);color:#080b0f}
+.btn-gold:hover{background:var(--gold-lt)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--mid)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-tab{background:transparent;border:1px solid var(--border);color:var(--mid);padding:6px 14px;border-radius:var(--radius);font-size:11.5px;transition:all .15s}
+.btn-tab.active,.btn-tab:hover{background:rgba(200,168,75,.08);border-color:var(--gold);color:var(--gold)}
+.btn-tab.active{color:var(--gold-lt)}
+
+/* ═══════════════════════════════════════════════
+   CARDS & GRIDS
+═══════════════════════════════════════════════ */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.card-p{padding:20px}
+.card-hover{transition:border-color .15s}
+.card-hover:hover{border-color:var(--border2)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.section{margin-bottom:20px}
+.flex-row{display:flex;align-items:center;gap:8px}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════════════ */
+.page-title{font-family:var(--serif);font-size:1.55rem;color:var(--text)}
+.page-sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:4px;letter-spacing:.04em}
+.section-title{font-family:var(--serif);font-size:1rem;color:var(--text);margin-bottom:4px}
+.section-sub{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.05em;margin-bottom:16px}
+.label{font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.mono{font-family:var(--mono)}
+
+/* ═══════════════════════════════════════════════
+   KPI CARDS
+═══════════════════════════════════════════════ */
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:border-color .15s}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-label{font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+.kpi-value{font-family:var(--mono);font-size:1.55rem;font-weight:600;letter-spacing:-.03em;color:var(--text);margin-bottom:6px}
+.kpi-change{display:flex;align-items:center;gap:6px}
+.kpi-delta{font-family:var(--mono);font-size:11px;font-weight:600}
+.kpi-meta{font-size:11px;color:var(--dim)}
+.up{color:var(--green)}
+.down{color:var(--red)}
+
+/* ═══════════════════════════════════════════════
+   TAGS / BADGES
+═══════════════════════════════════════════════ */
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.tag-green{background:rgba(62,207,130,.12);color:var(--green)}
+.tag-red{background:rgba(240,82,82,.12);color:var(--red)}
+.tag-amber{background:rgba(240,160,48,.12);color:var(--amber)}
+.tag-gold{background:rgba(200,168,75,.12);color:var(--gold)}
+.tag-cyan{background:rgba(77,184,240,.12);color:var(--cyan)}
+.tag-purple{background:rgba(155,127,232,.12);color:var(--purple)}
+
+/* ═══════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════ */
+.tbl thead tr{background:var(--surface)}
+.tbl th{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;font-weight:500}
+.tbl td{padding:9px 12px;border-bottom:1px solid rgba(28,37,53,.5);font-size:12.5px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:rgba(255,255,255,.015)}
+.tbl-total td{border-top:2px solid var(--gold)!important;border-bottom:none!important;background:rgba(200,168,75,.04)!important;font-weight:700}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BARS
+═══════════════════════════════════════════════ */
+.progress{height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:5px}
+.progress-fill{height:100%;border-radius:2px;transition:width .6s ease}
+
+/* ═══════════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════════ */
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+/* ═══════════════════════════════════════════════
+   CHART CONTAINERS
+═══════════════════════════════════════════════ */
+.chart-wrap{position:relative}
+
+/* ═══════════════════════════════════════════════
+   MODULE: FINANCIAL STATEMENTS
+═══════════════════════════════════════════════ */
+.fs-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(28,37,53,.5)}
+.fs-row:last-child{border-bottom:none}
+.fs-row.total{border-top:2px solid var(--gold);border-bottom:none;padding:10px 0;margin-top:4px}
+.fs-row.subtotal{border-top:1px solid var(--border2);font-weight:600}
+.fs-label{font-size:12.5px;color:var(--mid)}
+.fs-val{font-family:var(--mono);font-size:12.5px}
+.fs-section-head{font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* ═══════════════════════════════════════════════
+   MODULE: ARCHITECTURE
+═══════════════════════════════════════════════ */
+.arch-table .tbl td:first-child{font-family:var(--mono);font-size:11px;color:var(--mid);min-width:130px}
+.arch-table .tbl td:last-child{font-family:var(--mono);font-size:10px}
+.schema-block{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:8px}
+.schema-name{font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:4px;font-weight:600}
+.schema-cols{font-family:var(--mono);font-size:9px;color:var(--dim);line-height:1.8}
+.api-route{font-family:var(--mono);font-size:9px;color:var(--dim);padding:3px 0;border-bottom:1px solid var(--border)}
+.api-route:last-child{border-bottom:none}
+.roadmap-phase{padding:16px;background:var(--surface);border-radius:6px;border:1px solid}
+.roadmap-item{font-size:11.5px;color:var(--mid);padding:4px 0;display:flex;align-items:flex-start;gap:6px}
+.roadmap-arrow{flex-shrink:0;font-size:10px;margin-top:1px}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .3s ease forwards}
+.stagger-1{animation-delay:.05s;opacity:0}
+.stagger-2{animation-delay:.1s;opacity:0}
+.stagger-3{animation-delay:.15s;opacity:0}
+.stagger-4{animation-delay:.2s;opacity:0}
+
+/* ═══════════════════════════════════════════════
+   SENSITIVITY MATRIX
+═══════════════════════════════════════════════ */
+.matrix-cell{text-align:center;font-family:var(--mono);font-size:11px;padding:7px 10px!important;border-bottom:1px solid var(--border)!important}
+.matrix-cell.base{background:var(--gold)!important;color:#080b0f!important;font-weight:700}
+.matrix-cell.high{color:var(--green)}
+.matrix-cell.mid-val{color:var(--text)}
+.matrix-cell.low{color:var(--red)}
+
+/* ═══════════════════════════════════════════════
+   INFO BANNER
+═══════════════════════════════════════════════ */
+.info-banner{padding:12px 16px;border-radius:var(--radius);font-size:12px;color:var(--mid)}
+.info-gold{background:rgba(200,168,75,.05);border:1px solid var(--gold-dk)}
+.info-green{background:rgba(62,207,130,.05);border:1px solid rgba(62,207,130,.2)}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — TABLET (≤960px)
+═══════════════════════════════════════════════ */
+@media(max-width:960px){
+  :root{--sidebar-w:210px}
+  .grid-6{grid-template-columns:repeat(3,1fr)}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .content{padding:20px 20px}
+  .topbar{padding:12px 20px}
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤720px)
+═══════════════════════════════════════════════ */
+@media(max-width:720px){
+  .sidebar{
+    position:fixed;top:0;left:0;height:100%;
+    transform:translateX(-100%);
+    box-shadow:4px 0 24px rgba(0,0,0,.5);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .overlay.open{display:block}
+  .hamburger{display:flex;align-items:center;gap:6px}
+  .main{overflow-y:auto}
+  .grid-2{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-6{grid-template-columns:repeat(2,1fr)}
+  .content{padding:16px}
+  .topbar{padding:12px 16px}
+  .topbar-right .btn-outline{display:none}
+  .btn-tab{padding:5px 10px;font-size:10.5px}
+  .kpi-value{font-size:1.25rem}
+  .page-title{font-size:1.25rem}
+  .fs-pair{grid-template-columns:1fr}
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (≤480px)
+═══════════════════════════════════════════════ */
+@media(max-width:480px){
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-6{grid-template-columns:1fr 1fr}
+  .hide-xs{display:none!important}
+  .tbl th:nth-child(n+4),.tbl td:nth-child(n+4){display:none}
+  .content{padding:12px}
+  .kpi-value{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- OVERLAY for mobile -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-name">FinSight Pro</div>
+      <div class="sb-logo-ver">ENTERPRISE · v2.4.1 · GAAP/IFRS</div>
+    </div>
+    <div class="sb-company">
+      <div class="sb-company-name">Acme Corporation Inc.</div>
+      <div class="sb-company-sub">FY 2024 · USD · Consolidated</div>
+    </div>
+    <nav class="sb-nav" id="nav">
+      <div class="nav-item active" data-module="dashboard"><span class="nav-icon">◈</span>Dashboard</div>
+      <div class="nav-item" data-module="ledger"><span class="nav-icon">≡</span>General Ledger</div>
+      <div class="nav-item" data-module="statements"><span class="nav-icon">∑</span>Financial Statements</div>
+      <div class="nav-item" data-module="ratios"><span class="nav-icon">%</span>Ratio Analysis</div>
+      <div class="nav-item" data-module="forecast"><span class="nav-icon">◌</span>Budgeting & Forecast</div>
+      <div class="nav-item" data-module="performance"><span class="nav-icon">◎</span>Performance Mgmt</div>
+      <div class="nav-item" data-module="risk"><span class="nav-icon">⚑</span>Risk & Compliance</div>
+      <div class="nav-item" data-module="architecture"><span class="nav-icon">⬡</span>Architecture</div>
+    </nav>
+    <div class="sb-footer">
+      <div class="live-row"><div class="live-dot"></div><span class="sb-footer-text">All systems operational</span></div>
+      <div class="sb-footer-text">Last sync: 2 min ago · Dec 15, 2024</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+            <rect width="16" height="2" rx="1"/><rect y="5" width="16" height="2" rx="1"/><rect y="10" width="16" height="2" rx="1"/>
+          </svg>
+        </button>
+        <div>
+          <div class="topbar-title" id="topbar-title">Financial Overview</div>
+          <div class="topbar-sub" id="topbar-sub">FY 2024 · Consolidated · GAAP</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="badge-live"><div class="live-dot"></div>LIVE</div>
+        <button class="btn btn-outline btn-sm" onclick="window.print()">Export PDF</button>
+        <button class="btn btn-gold btn-sm">Generate Report</button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════ */
+const D = {
+  months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  pl: [
+    {m:'Jan',rev:4200,cogs:1890,gross:2310,opex:1400,ebit:910,net:682},
+    {m:'Feb',rev:4550,cogs:2002,gross:2548,opex:1450,ebit:1098,net:823},
+    {m:'Mar',rev:5100,cogs:2193,gross:2907,opex:1520,ebit:1387,net:1040},
+    {m:'Apr',rev:4800,cogs:2064,gross:2736,opex:1490,ebit:1246,net:934},
+    {m:'May',rev:5400,cogs:2268,gross:3132,opex:1560,ebit:1572,net:1179},
+    {m:'Jun',rev:5900,cogs:2419,gross:3481,opex:1620,ebit:1861,net:1396},
+    {m:'Jul',rev:6200,cogs:2542,gross:3658,opex:1680,ebit:1978,net:1483},
+    {m:'Aug',rev:6500,cogs:2665,gross:3835,opex:1720,ebit:2115,net:1586},
+    {m:'Sep',rev:6100,cogs:2501,gross:3599,opex:1700,ebit:1899,net:1424},
+    {m:'Oct',rev:6800,cogs:2788,gross:4012,opex:1780,ebit:2232,net:1674},
+    {m:'Nov',rev:7200,cogs:2952,gross:4248,opex:1840,ebit:2408,net:1806},
+    {m:'Dec',rev:7800,cogs:3120,gross:4680,opex:1900,ebit:2780,net:2085},
+  ],
+  cf: [
+    {m:'Jan',ops:820,inv:-340,fin:-120},{m:'Feb',ops:950,inv:-200,fin:-150},
+    {m:'Mar',ops:1200,inv:-800,fin:0},{m:'Apr',ops:1100,inv:-150,fin:-200},
+    {m:'May',ops:1350,inv:-400,fin:-150},{m:'Jun',ops:1600,inv:-600,fin:500},
+    {m:'Jul',ops:1700,inv:-250,fin:-200},{m:'Aug',ops:1850,inv:-350,fin:-150},
+    {m:'Sep',ops:1600,inv:-500,fin:-100},{m:'Oct',ops:1900,inv:-700,fin:-200},
+    {m:'Nov',ops:2100,inv:-400,fin:-250},{m:'Dec',ops:2400,inv:-900,fin:200},
+  ],
+  kpis: [
+    {label:'Annual Revenue',value:'$80.6M',change:'+18.4%',up:true,sub:'vs prior year'},
+    {label:'Gross Profit',value:'$48.0M',change:'+22.1%',up:true,sub:'59.7% margin'},
+    {label:'EBITDA',value:'$33.2M',change:'+19.8%',up:true,sub:'41.2% margin'},
+    {label:'Net Income',value:'$20.1M',change:'+24.6%',up:true,sub:'26.7% margin'},
+    {label:'Free Cash Flow',value:'$16.4M',change:'+31.2%',up:true,sub:'FCF yield 20.4%'},
+    {label:'ARR (SaaS)',value:'$74.2M',change:'+28.7%',up:true,sub:'Annual recurring'},
+  ],
+  budget: [
+    {dept:'Sales',budget:8200,actual:8950,variance:750},
+    {dept:'Marketing',budget:2400,actual:2180,variance:-220},
+    {dept:'R&D',budget:3100,actual:3340,variance:240},
+    {dept:'Operations',budget:4200,actual:4080,variance:-120},
+    {dept:'G&A',budget:1800,actual:1920,variance:120},
+    {dept:'IT',budget:1200,actual:1150,variance:-50},
+  ],
+  journalEntries: [
+    {id:'JE-2401',date:'2024-12-01',desc:'Revenue Recognition – SaaS',debit:'Accounts Receivable',credit:'Revenue',amount:124500,status:'posted'},
+    {id:'JE-2402',date:'2024-12-02',desc:'Payroll Processing',debit:'Salaries Expense',credit:'Cash',amount:89200,status:'posted'},
+    {id:'JE-2403',date:'2024-12-03',desc:'Software License Purchase',debit:'Prepaid Expense',credit:'Accounts Payable',amount:18400,status:'posted'},
+    {id:'JE-2404',date:'2024-12-05',desc:'Depreciation – Equipment',debit:'Depreciation Expense',credit:'Acc. Depreciation',amount:4200,status:'posted'},
+    {id:'JE-2405',date:'2024-12-08',desc:'Customer Advance Payment',debit:'Cash',credit:'Deferred Revenue',amount:67000,status:'posted'},
+    {id:'JE-2406',date:'2024-12-10',desc:'Office Rent Accrual',debit:'Rent Expense',credit:'Accrued Liabilities',amount:22500,status:'pending'},
+    {id:'JE-2407',date:'2024-12-12',desc:'Marketing Campaign Cost',debit:'Marketing Expense',credit:'Cash',amount:31800,status:'posted'},
+    {id:'JE-2408',date:'2024-12-15',desc:'Interest Income',debit:'Cash',credit:'Interest Income',amount:3400,status:'pending'},
+  ],
+  departments: [
+    {dept:'Enterprise Sales',rev:38400,cost:12800,contrib:25600,cm:66.7,hc:24},
+    {dept:'SMB Sales',rev:21600,cost:8640,contrib:12960,cm:60.0,hc:18},
+    {dept:'Professional Services',rev:12000,cost:7200,contrib:4800,cm:40.0,hc:12},
+    {dept:'Support & Success',rev:5200,cost:4160,contrib:1040,cm:20.0,hc:16},
+    {dept:'Partnerships',rev:3350,cost:1340,contrib:2010,cm:60.0,hc:4},
+  ],
+  auditLog: [
+    {ts:'2024-12-15 09:42:11',user:'j.morgan@corp.com',action:'Posted JE-2405 – Customer Advance',risk:'low',module:'GL'},
+    {ts:'2024-12-15 10:18:33',user:'a.chen@corp.com',action:'Modified Q1 Budget Assumptions',risk:'medium',module:'Budget'},
+    {ts:'2024-12-15 11:05:44',user:'admin@corp.com',action:'Exported Financial Statements PDF',risk:'low',module:'Reports'},
+    {ts:'2024-12-15 13:22:07',user:'r.patel@corp.com',action:'Approved Vendor Payment $89,200',risk:'high',module:'AP'},
+    {ts:'2024-12-15 14:47:19',user:'j.morgan@corp.com',action:'Reversed Journal Entry JE-2401',risk:'high',module:'GL'},
+    {ts:'2024-12-15 15:33:55',user:'a.chen@corp.com',action:'Updated Revenue Forecast Model',risk:'low',module:'Forecast'},
+    {ts:'2024-12-15 16:11:22',user:'s.kim@corp.com',action:'Created New Cost Center: R&D-West',risk:'medium',module:'COA'},
+  ],
+  scenarios: [
+    {name:'Best Case',rev:98400,gross:60200,opex:21400,net:28920,col:'#3ecf82'},
+    {name:'Base Case',rev:80550,gross:48027,opex:20660,net:20112,col:'#c8a84b'},
+    {name:'Worst Case',rev:63200,gross:34800,opex:19800,net:11250,col:'#f05252'},
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmtK = n => '$' + Math.abs(n).toLocaleString() + 'K';
+const fmtM = n => '$' + (n/1000).toFixed(1) + 'M';
+const tag = (type, text) => `<span class="tag tag-${type}">${text}</span>`;
+const C = {
+  bg:'#080b0f', surface:'#0d1117', card:'#111820', border:'#1c2535',
+  gold:'#c8a84b', goldLt:'#e6c96a', goldDk:'#6b5520',
+  cyan:'#4db8f0', green:'#3ecf82', red:'#f05252', amber:'#f0a030',
+  purple:'#9b7fe8', text:'#e2e8f0', mid:'#7a8fa8', dim:'#3d5068',
+  mono:"'IBM Plex Mono', monospace",
+};
+let chartInstances = {};
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => { try{c.destroy()}catch(e){} });
+  chartInstances = {};
+}
+function mkChart(id, cfg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  chartInstances[id] = new Chart(el, cfg);
+}
+const gridDefaults = {
+  color: C.border, lineWidth: 1,
+};
+const tickStyle = { color: C.dim, font: { family: "'IBM Plex Mono', monospace", size: 9 } };
+const tooltipStyle = {
+  backgroundColor: C.card, borderColor: C.border, borderWidth: 1,
+  titleColor: C.mid, bodyColor: C.text,
+  titleFont: { family: "'IBM Plex Mono', monospace", size: 10 },
+  bodyFont: { family: "'IBM Plex Mono', monospace", size: 11 },
+  padding: 10, cornerRadius: 4,
+};
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR TOGGLE
+═══════════════════════════════════════════════ */
+function toggleSidebar() {
+  const sb = $('#sidebar'), ov = $('#overlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
+}
+function closeSidebar() {
+  $('#sidebar').classList.remove('open');
+  $('#overlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+const moduleInfo = {
+  dashboard:    ['Financial Overview', 'FY 2024 · Consolidated · GAAP'],
+  ledger:       ['General Ledger', 'Double-Entry Engine · December 2024'],
+  statements:   ['Financial Statements', 'Auto-generated · GAAP · FY 2024'],
+  ratios:       ['Ratio Analysis', 'Liquidity · Solvency · Profitability · Efficiency'],
+  forecast:     ['Budgeting & Forecasting', 'Rolling 12M · Scenario Modeling · FY 2025'],
+  performance:  ['Performance Management', 'KPI · ROE/ROA · Department Profitability'],
+  risk:         ['Risk & Compliance', 'Internal Controls · Audit Trail · GAAP/IFRS'],
+  architecture: ['System Architecture', 'SaaS Platform · API-First · Multi-tenant'],
+};
+function navigate(module) {
+  $$('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-module="${module}"]`).classList.add('active');
+  const [title, sub] = moduleInfo[module];
+  $('#topbar-title').textContent = title;
+  $('#topbar-sub').textContent = sub;
+  destroyCharts();
+  const content = $('#content');
+  content.innerHTML = '';
+  closeSidebar();
+  modules[module]();
+}
+$$('.nav-item').forEach(item => {
+  item.addEventListener('click', () => navigate(item.dataset.module));
+});
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: DASHBOARD
+═══════════════════════════════════════════════ */
+const modules = {};
+
+modules.dashboard = function() {
+  const el = $('#content');
+  el.innerHTML = `
+  <div class="fade-up">
+    <!-- KPI GRID -->
+    <div class="grid-6 section stagger-1 fade-up">
+      ${D.kpis.map(k => `
+        <div class="kpi-card">
+          <div class="kpi-label">${k.label}</div>
+          <div class="kpi-value">${k.value}</div>
+          <div class="kpi-change">
+            <span class="kpi-delta ${k.up?'up':'down'}">${k.up?'▲':'▼'} ${k.change}</span>
+            <span class="kpi-meta">${k.sub}</span>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="grid-2 section stagger-2 fade-up">
+      <div class="card card-p">
+        <div class="section-title">Revenue & Profitability</div>
+        <div class="section-sub">MONTHLY · 2024 (USD $K)</div>
+        <div class="chart-wrap"><canvas id="plChart" height="200"></canvas></div>
+      </div>
+      <div class="card card-p">
+        <div class="section-title">Cash Flow by Category</div>
+        <div class="section-sub">OPERATING · INVESTING · FINANCING</div>
+        <div class="chart-wrap"><canvas id="cfChart" height="200"></canvas></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="grid-2 section stagger-3 fade-up">
+      <div class="card card-p">
+        <div class="section-title">Budget vs Actual</div>
+        <div class="section-sub">BY DEPARTMENT · FY 2024</div>
+        <div class="chart-wrap"><canvas id="budgetChart" height="220"></canvas></div>
+      </div>
+      <div class="card card-p">
+        <div class="section-title">Margin Trend</div>
+        <div class="section-sub">GROSS · EBIT · NET MARGIN %</div>
+        <div class="chart-wrap"><canvas id="marginChart" height="220"></canvas></div>
+      </div>
+    </div>
+  </div>`;
+
+  // P&L Chart
+  mkChart('plChart', {
+    type: 'bar',
+    data: {
+      labels: D.pl.map(d=>d.m),
+      datasets: [
+        { type:'bar', label:'Revenue', data:D.pl.map(d=>d.rev), backgroundColor:'rgba(200,168,75,.25)', borderColor:C.gold, borderWidth:1, borderRadius:2, yAxisID:'y' },
+        { type:'line', label:'Gross Profit', data:D.pl.map(d=>d.gross), borderColor:C.green, borderWidth:2, pointRadius:0, tension:.4, yAxisID:'y' },
+        { type:'line', label:'Net Income', data:D.pl.map(d=>d.net), borderColor:C.cyan, borderWidth:2, pointRadius:0, tension:.4, yAxisID:'y' },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}}, tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}K`}} },
+      scales:{
+        x:{ ticks:tickStyle, grid:{color:'rgba(28,37,53,.6)'}, border:{color:C.border} },
+        y:{ ticks:{...tickStyle,callback:v=>'$'+v+'K'}, grid:gridDefaults, border:{color:'transparent'} },
+      }
+    }
+  });
+
+  // CF Chart
+  mkChart('cfChart', {
+    type: 'bar',
+    data: {
+      labels: D.cf.map(d=>d.m),
+      datasets: [
+        { label:'Operating', data:D.cf.map(d=>d.ops), backgroundColor:'rgba(62,207,130,.5)', borderRadius:{topLeft:2,topRight:2} },
+        { label:'Investing', data:D.cf.map(d=>d.inv), backgroundColor:'rgba(240,82,82,.5)' },
+        { label:'Financing', data:D.cf.map(d=>d.fin), backgroundColor:'rgba(77,184,240,.4)', borderRadius:{topLeft:2,topRight:2} },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}}, tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}K`}} },
+      scales:{
+        x:{ ticks:tickStyle, grid:{color:'rgba(28,37,53,.6)'}, border:{color:C.border}, stacked:true },
+        y:{ ticks:{...tickStyle,callback:v=>'$'+v+'K'}, grid:gridDefaults, border:{color:'transparent'}, stacked:true },
+      }
+    }
+  });
+
+  // Budget vs Actual
+  mkChart('budgetChart', {
+    type:'bar',
+    data:{
+      labels:D.budget.map(d=>d.dept),
+      datasets:[
+        { label:'Budget', data:D.budget.map(d=>d.budget), backgroundColor:'rgba(107,85,32,.5)', borderColor:C.goldDk, borderWidth:1, borderRadius:3 },
+        { label:'Actual', data:D.budget.map(d=>d.actual), backgroundColor:'rgba(200,168,75,.6)', borderColor:C.gold, borderWidth:1, borderRadius:3 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, indexAxis:'y',
+      plugins:{ legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}}, tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}K`}} },
+      scales:{
+        x:{ ticks:{...tickStyle,callback:v=>'$'+v+'K'}, grid:gridDefaults, border:{color:'transparent'} },
+        y:{ ticks:{...tickStyle,color:C.mid}, grid:{color:'rgba(28,37,53,.4)'}, border:{color:C.border} },
+      }
+    }
+  });
+
+  // Margin Trend
+  const margins = D.pl.map(d=>({
+    gross:+((d.gross/d.rev)*100).toFixed(1),
+    ebit:+((d.ebit/d.rev)*100).toFixed(1),
+    net:+((d.net/d.rev)*100).toFixed(1),
+  }));
+  mkChart('marginChart', {
+    type:'line',
+    data:{
+      labels:D.pl.map(d=>d.m),
+      datasets:[
+        { label:'Gross Margin', data:margins.map(m=>m.gross), borderColor:C.green, backgroundColor:'rgba(62,207,130,.07)', fill:true, borderWidth:2, pointRadius:0, tension:.4 },
+        { label:'EBIT Margin', data:margins.map(m=>m.ebit), borderColor:C.gold, backgroundColor:'rgba(200,168,75,.06)', fill:true, borderWidth:2, pointRadius:0, tension:.4 },
+        { label:'Net Margin', data:margins.map(m=>m.net), borderColor:C.cyan, backgroundColor:'rgba(77,184,240,.05)', fill:true, borderWidth:2, pointRadius:0, tension:.4 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}}, tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}} },
+      scales:{
+        x:{ ticks:tickStyle, grid:{color:'rgba(28,37,53,.6)'}, border:{color:C.border} },
+        y:{ ticks:{...tickStyle,callback:v=>v+'%'}, grid:gridDefaults, border:{color:'transparent'} },
+      }
+    }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: GENERAL LEDGER
+═══════════════════════════════════════════════ */
+modules.ledger = function() {
+  let filter = 'all';
+  function render() {
+    const filtered = filter === 'all' ? D.journalEntries : D.journalEntries.filter(j=>j.status===filter);
+    const total = D.journalEntries.reduce((a,b)=>a+b.amount,0);
+    const posted = D.journalEntries.filter(j=>j.status==='posted').length;
+    const pending = D.journalEntries.filter(j=>j.status==='pending').length;
+    $('#content').innerHTML = `
+    <div class="fade-up">
+      <!-- Quick Stats -->
+      <div class="grid-4 section">
+        ${[
+          {l:'Total Entries',v:D.journalEntries.length,s:'December 2024'},
+          {l:'Total Debits',v:'$'+Math.round(total/1000)+'K',s:'= Total Credits ✓'},
+          {l:'Posted',v:posted,s:'entries approved'},
+          {l:'Pending Review',v:pending,s:'awaiting approval'},
+        ].map(s=>`
+          <div class="kpi-card">
+            <div class="kpi-label">${s.l}</div>
+            <div class="kpi-value" style="font-size:1.35rem">${s.v}</div>
+            <div class="kpi-meta">${s.s}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Filter + Table -->
+      <div class="card section">
+        <div style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="section-title">Journal Entries</div>
+            <div class="section-sub" style="margin-bottom:0">DOUBLE-ENTRY · ACCRUAL BASIS</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${['all','posted','pending'].map(f=>`<button class="btn-tab ${filter===f?'active':''}" onclick="glFilter('${f}')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+            <button class="btn btn-gold btn-sm">+ New Entry</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;margin-top:12px">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Entry ID</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th class="hide-xs">Debit Account</th>
+                <th class="hide-xs">Credit Account</th>
+                <th style="text-align:right">Amount</th>
+                <th style="text-align:center">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(j=>`
+                <tr>
+                  <td><span style="font-family:var(--mono);font-size:11px;color:var(--gold)">${j.id}</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;color:var(--mid)">${j.date}</span></td>
+                  <td style="font-size:12.5px;max-width:200px">${j.desc}</td>
+                  <td class="hide-xs"><span style="font-family:var(--mono);font-size:10px;color:var(--cyan)">${j.debit}</span></td>
+                  <td class="hide-xs"><span style="font-family:var(--mono);font-size:10px;color:var(--purple)">${j.credit}</span></td>
+                  <td style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:600">$${j.amount.toLocaleString()}</td>
+                  <td style="text-align:center">${tag(j.status==='posted'?'green':'amber',j.status)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Trial Balance Banner -->
+      <div class="info-banner info-gold">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:600">TRIAL BALANCE CHECK</span>
+        &nbsp;· Total Debits = Total Credits = $${total.toLocaleString()} · 
+        <strong style="color:var(--green)">System is balanced ✓</strong>
+        &nbsp;&nbsp;
+        <span style="font-family:var(--mono);font-size:9px;color:var(--dim)">Debit = DR (Asset/Expense) · Credit = CR (Liability/Revenue/Equity)</span>
+      </div>
+
+      <!-- Chart of Accounts Reference -->
+      <div class="card card-p" style="margin-top:16px">
+        <div class="section-title">Chart of Accounts Structure</div>
+        <div class="section-sub">STANDARD 5-CATEGORY FRAMEWORK · GAAP COMPLIANT</div>
+        <div class="grid-4" style="margin-top:4px">
+          ${[
+            {code:'1000–1999',name:'Assets',type:'Normal: Debit',col:C.cyan,ex:'Cash, AR, Inventory, PP&E'},
+            {code:'2000–2999',name:'Liabilities',type:'Normal: Credit',col:C.red,ex:'AP, Accrued Liab, LT Debt'},
+            {code:'3000–3999',name:'Equity',type:'Normal: Credit',col:C.purple,ex:'Common Stock, Retained Earnings'},
+            {code:'4000–4999',name:'Revenue',type:'Normal: Credit',col:C.green,ex:'Sales, Interest, Other Income'},
+            {code:'5000–5999',name:'COGS',type:'Normal: Debit',col:C.amber,ex:'Direct Materials, Labor'},
+            {code:'6000–6999',name:'OpEx',type:'Normal: Debit',col:C.gold,ex:'Salaries, Rent, Marketing'},
+            {code:'7000–7999',name:'Other Income',type:'Normal: Credit',col:C.green,ex:'Gain on Sale, Misc Income'},
+            {code:'8000–8999',name:'Tax',type:'Normal: Debit',col:C.amber,ex:'Income Tax Expense'},
+          ].map(a=>`
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px">
+              <div style="font-family:var(--mono);font-size:9px;color:${a.col};margin-bottom:4px">${a.code}</div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:2px">${a.name}</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-bottom:4px">${a.type}</div>
+              <div style="font-size:10px;color:var(--mid)">${a.ex}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+  window.glFilter = function(f) { filter = f; render(); };
+  render();
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: FINANCIAL STATEMENTS
+═══════════════════════════════════════════════ */
+modules.statements = function() {
+  let tab = 'bs';
+  function renderBS() {
+    const bsAssets = {
+      current:[
+        {n:'Cash & Cash Equivalents',v:8420},{n:'Accounts Receivable, net',v:6840},
+        {n:'Inventory',v:3210},{n:'Prepaid Expenses',v:1180},{n:'Other Current Assets',v:890},
+      ],
+      nonCurrent:[
+        {n:'Property, Plant & Equipment',v:12400},{n:'Accumulated Depreciation',v:-4200},
+        {n:'Intangible Assets (net)',v:5600},{n:'Long-term Investments',v:3800},{n:'Other Non-current Assets',v:1100},
+      ],
+    };
+    const bsLiab = {
+      current:[
+        {n:'Accounts Payable',v:4120},{n:'Accrued Liabilities',v:2340},
+        {n:'Short-term Debt',v:1500},{n:'Deferred Revenue',v:2890},{n:'Current Tax Payable',v:780},
+      ],
+      nonCurrent:[{n:'Long-term Debt',v:7200},{n:'Deferred Tax Liability',v:1400},{n:'Other LT Liabilities',v:680}],
+    };
+    const bsEquity=[{n:'Common Stock',v:5000},{n:'Additional Paid-in Capital',v:8400},{n:'Retained Earnings',v:9330},{n:'Other Comprehensive Income',v:-210}];
+    const sumCA=bsAssets.current.reduce((a,b)=>a+b.v,0);
+    const sumNCA=bsAssets.nonCurrent.reduce((a,b)=>a+b.v,0);
+    const totalA=sumCA+sumNCA;
+    const sumCL=bsLiab.current.reduce((a,b)=>a+b.v,0);
+    const sumNCL=bsLiab.nonCurrent.reduce((a,b)=>a+b.v,0);
+    const totalL=sumCL+sumNCL;
+    const totalE=bsEquity.reduce((a,b)=>a+b.v,0);
+    const fsRow = (n,v,cls='',c='var(--text)')=>`
+      <div class="fs-row ${cls}">
+        <span class="fs-label" style="${cls.includes('total')?'color:var(--gold-lt);font-weight:700':''}">${n}</span>
+        <span class="fs-val" style="color:${v<0?C.red:cls.includes('total')?C.gold:c}">${v<0?'('+Math.abs(v).toLocaleString()+')':v.toLocaleString()}</span>
+      </div>`;
+    return `
+      <div class="grid-2 fs-pair">
+        <div class="card card-p">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);margin-bottom:16px;letter-spacing:.08em">ASSETS</div>
+          <div class="fs-section-head">Current Assets</div>
+          ${bsAssets.current.map(a=>fsRow(a.n,a.v)).join('')}
+          ${fsRow('Total Current Assets',sumCA,'total',C.green)}
+          <div class="fs-section-head" style="margin-top:16px">Non-Current Assets</div>
+          ${bsAssets.nonCurrent.map(a=>fsRow(a.n,a.v)).join('')}
+          ${fsRow('Total Non-Current Assets',sumNCA,'total',C.green)}
+          <div class="fs-row" style="border-top:2px solid var(--gold);padding:12px 0;margin-top:4px">
+            <span style="font-weight:700;color:var(--gold);font-family:var(--mono);font-size:11px;letter-spacing:.06em">TOTAL ASSETS</span>
+            <span style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold)">${totalA.toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="card card-p">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:16px;letter-spacing:.08em">LIABILITIES & EQUITY</div>
+          <div class="fs-section-head">Current Liabilities</div>
+          ${bsLiab.current.map(l=>fsRow(l.n,l.v,'','var(--text)')).join('')}
+          ${fsRow('Total Current Liabilities',sumCL,'total',C.red)}
+          <div class="fs-section-head" style="margin-top:16px">Non-Current Liabilities</div>
+          ${bsLiab.nonCurrent.map(l=>fsRow(l.n,l.v)).join('')}
+          ${fsRow('Total Liabilities',totalL,'total',C.red)}
+          <hr class="divider">
+          <div class="fs-section-head">Shareholders' Equity</div>
+          ${bsEquity.map(e=>fsRow(e.n,e.v)).join('')}
+          ${fsRow('Total Equity',totalE,'total',C.green)}
+          <div class="fs-row" style="border-top:2px solid var(--gold);padding:12px 0;margin-top:4px">
+            <span style="font-weight:700;color:var(--gold);font-family:var(--mono);font-size:11px;letter-spacing:.06em">TOTAL L + EQUITY</span>
+            <span style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold)">${(totalL+totalE).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+  function renderIS() {
+    const annRev=D.pl.reduce((a,b)=>a+b.rev,0);
+    const annCOGS=D.pl.reduce((a,b)=>a+b.cogs,0);
+    const annGross=annRev-annCOGS;
+    const annOpex=D.pl.reduce((a,b)=>a+b.opex,0);
+    const annEBIT=annGross-annOpex;
+    const annInt=-840, annOther=412;
+    const annEBT=annEBIT+annInt+annOther;
+    const annTax=Math.round(annEBT*-.25);
+    const annNet=D.pl.reduce((a,b)=>a+b.net,0);
+    const rows=[
+      {l:'Revenue',v:annRev,c:C.green,bold:false,indent:0},
+      {l:'Cost of Goods Sold',v:-annCOGS,c:C.red,bold:false,indent:20},
+      {l:'Gross Profit',v:annGross,c:C.text,bold:true,indent:0,sep:true},
+      {l:`Gross Margin: ${((annGross/annRev)*100).toFixed(1)}%`,v:null,c:C.dim,indent:20,small:true},
+      {l:'Sales & Marketing Expense',v:-Math.round(annOpex*.35),c:C.red,bold:false,indent:20},
+      {l:'General & Administrative',v:-Math.round(annOpex*.3),c:C.red,bold:false,indent:20},
+      {l:'Research & Development',v:-Math.round(annOpex*.35),c:C.red,bold:false,indent:20},
+      {l:'EBIT (Operating Income)',v:annEBIT,c:C.text,bold:true,indent:0,sep:true},
+      {l:'Interest Expense',v:annInt,c:C.red,bold:false,indent:20},
+      {l:'Other Income / (Expense)',v:annOther,c:C.green,bold:false,indent:20},
+      {l:'EBT (Pre-Tax Income)',v:annEBT,c:C.text,bold:true,indent:0,sep:true},
+      {l:'Income Tax Expense (25%)',v:annTax,c:C.red,bold:false,indent:20},
+      {l:'Net Income',v:annNet,c:C.gold,bold:true,indent:0,large:true},
+      {l:`Net Margin: ${((annNet/annRev)*100).toFixed(1)}%  ·  EPS: $4.02  ·  Diluted EPS: $3.88`,v:null,c:C.dim,indent:0,small:true},
+    ];
+    return `
+      <div class="card card-p" style="max-width:700px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:20px;letter-spacing:.1em">INCOME STATEMENT · FY 2024 (USD $K)</div>
+        ${rows.map(r=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:${r.large?'11px':'7px'} 0 ${r.large?'11px':'7px'} ${r.indent}px;
+            border-bottom:${r.sep?'1px solid var(--border2)':'none'};
+            border-top:${r.large?'2px solid var(--gold)':'none'};margin-top:${r.large?'4px':'0'}">
+            <span style="font-size:${r.small?'10px':r.large?'14px':'13px'};font-weight:${r.bold?700:400};color:${r.large?C.gold:r.bold?C.text:r.small?C.dim:C.mid};font-family:${r.small?C.mono:'var(--sans)'}">${r.l}</span>
+            ${r.v!==null?`<span style="font-family:var(--mono);font-size:${r.large?'15px':'13px'};font-weight:${r.bold?700:400};color:${r.c}">${r.v<0?'('+Math.abs(r.v).toLocaleString()+')':r.v.toLocaleString()}</span>`:''}
+          </div>`).join('')}
+      </div>`;
+  }
+  function renderCF() {
+    const sections=[
+      {title:'Operating Activities',col:C.green,items:[
+        {n:'Net Income',v:20112},{n:'Depreciation & Amortization',v:4820},
+        {n:'Share-based Compensation',v:2140},{n:'Changes in Working Capital',v:-2340},{n:'Other Operating Items',v:880},
+      ],total:25612},
+      {title:'Investing Activities',col:C.red,items:[
+        {n:'Capital Expenditures',v:-5200},{n:'Business Acquisitions',v:-1800},
+        {n:'Purchase of Investments',v:-2400},{n:'Proceeds from Asset Sales',v:680},
+      ],total:-8720},
+      {title:'Financing Activities',col:C.cyan,items:[
+        {n:'Proceeds from Debt Issuance',v:3000},{n:'Repayment of Long-term Debt',v:-2200},
+        {n:'Dividends Paid to Shareholders',v:-1400},{n:'Share Repurchases',v:-800},
+      ],total:-1400},
+      {title:'Cash Position Summary',col:C.gold,items:[
+        {n:'Beginning Cash Balance',v:5048},{n:'Net Operating CF',v:25612},
+        {n:'Net Investing CF',v:-8720},{n:'Net Financing CF',v:-1400},
+      ],total:20540,isSummary:true},
+    ];
+    return `
+      <div class="grid-2">
+        ${sections.map(s=>`
+          <div class="card card-p">
+            <div style="font-family:var(--mono);font-size:10px;color:${s.col};margin-bottom:16px;letter-spacing:.08em">${s.title.toUpperCase()}</div>
+            ${s.items.map(i=>`
+              <div class="fs-row">
+                <span class="fs-label">${i.n}</span>
+                <span class="fs-val" style="color:${i.v<0?C.red:C.green}">${i.v<0?'('+Math.abs(i.v).toLocaleString()+')':i.v.toLocaleString()}</span>
+              </div>`).join('')}
+            <div style="display:flex;justify-content:space-between;padding:10px 0 0;border-top:2px solid ${s.col};margin-top:4px">
+              <span style="font-weight:700;color:${s.col};font-size:12px">${s.isSummary?'Ending Cash Balance':'Net '+s.title.split(' ')[0]+' CF'}</span>
+              <span style="font-family:var(--mono);font-weight:700;color:${s.col};font-size:14px">${s.total.toLocaleString()}</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+  function render() {
+    destroyCharts();
+    $('#content').innerHTML = `
+    <div class="fade-up">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        ${[['bs','Balance Sheet'],['is','Income Statement'],['cf','Cash Flow Statement']].map(([k,v])=>`
+          <button class="btn-tab ${tab===k?'active':''}" onclick="fsTab('${k}')">${v}</button>`).join('')}
+      </div>
+      <div id="fs-content">${tab==='bs'?renderBS():tab==='is'?renderIS():renderCF()}</div>
+    </div>`;
+  }
+  window.fsTab = function(t) { tab=t; render(); };
+  render();
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: RATIO ANALYSIS
+═══════════════════════════════════════════════ */
+modules.ratios = function() {
+  const groups = [
+    { title:'Liquidity Ratios', icon:'💧', col:C.cyan, ratios:[
+      {n:'Current Ratio',v:2.34,b:2.0,s:'good',unit:'x',desc:'CA / CL'},
+      {n:'Quick Ratio',v:1.87,b:1.5,s:'good',unit:'x',desc:'(CA-Inv) / CL'},
+      {n:'Cash Ratio',v:0.94,b:0.5,s:'good',unit:'x',desc:'Cash / CL'},
+      {n:'Working Capital',v:4820,b:3000,s:'good',unit:'$K',desc:'CA - CL'},
+    ]},
+    { title:'Solvency Ratios', icon:'🏦', col:C.purple, ratios:[
+      {n:'Debt-to-Equity',v:0.42,b:0.6,s:'good',unit:'x',desc:'Total Debt / Equity'},
+      {n:'Debt-to-Assets',v:0.29,b:0.4,s:'good',unit:'x',desc:'Total Debt / Assets'},
+      {n:'Interest Coverage',v:8.7,b:3.0,s:'good',unit:'x',desc:'EBIT / Interest Exp'},
+      {n:'Equity Multiplier',v:1.42,b:2.0,s:'good',unit:'x',desc:'Assets / Equity'},
+    ]},
+    { title:'Profitability Ratios', icon:'📈', col:C.green, ratios:[
+      {n:'Gross Margin',v:59.7,b:45,s:'good',unit:'%',desc:'Gross Profit / Rev'},
+      {n:'EBIT Margin',v:35.6,b:20,s:'good',unit:'%',desc:'EBIT / Revenue'},
+      {n:'Net Profit Margin',v:26.7,b:15,s:'good',unit:'%',desc:'Net Income / Rev'},
+      {n:'EBITDA Margin',v:41.2,b:30,s:'good',unit:'%',desc:'EBITDA / Revenue'},
+    ]},
+    { title:'Efficiency Ratios', icon:'⚙️', col:C.amber, ratios:[
+      {n:'Asset Turnover',v:1.34,b:1.0,s:'good',unit:'x',desc:'Revenue / Avg Assets'},
+      {n:'Inventory Days',v:42,b:60,s:'good',unit:'days',desc:'Inv / COGS × 365'},
+      {n:'Receivables Days (DSO)',v:38,b:45,s:'good',unit:'days',desc:'AR / Rev × 365'},
+      {n:'Payables Days (DPO)',v:31,b:30,s:'watch',unit:'days',desc:'AP / COGS × 365'},
+    ]},
+  ];
+  $('#content').innerHTML = `
+  <div class="fade-up">
+    <div class="grid-2 section">
+      ${groups.map(g=>`
+        <div class="card card-p">
+          <div class="section-title">${g.icon} ${g.title}</div>
+          <div class="section-sub">${g.ratios.filter(r=>r.s==='good').length}/${g.ratios.length} WITHIN HEALTHY RANGE</div>
+          ${g.ratios.map(r=>{
+            const pct=Math.min((r.v/(r.b*1.6))*100,100);
+            const col=r.s==='good'?C.green:r.s==='watch'?C.amber:C.red;
+            return `<div style="margin-bottom:14px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px;align-items:center">
+                <div>
+                  <span style="font-size:12.5px;color:var(--mid)">${r.n}</span>
+                  <span style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:6px">${r.desc}</span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">bmark: ${r.b}${r.unit}</span>
+                  <span style="font-family:var(--mono);font-size:13px;color:${col};font-weight:600">${r.v}${r.unit}</span>
+                </div>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+            </div>`;
+          }).join('')}
+        </div>`).join('')}
+    </div>
+
+    <!-- Break-Even Analysis -->
+    <div class="card card-p section">
+      <div class="section-title">Break-Even & CVP Analysis</div>
+      <div class="section-sub">COST-VOLUME-PROFIT · CONTRIBUTION MARGIN FRAMEWORK</div>
+      <div class="grid-4" style="margin-bottom:16px">
+        ${[
+          {l:'Fixed Costs (Annual)',v:'$20.66M',s:'OPEX + Interest + Depreciation'},
+          {l:'Variable Cost Ratio',v:'40.3%',s:'COGS ÷ Revenue'},
+          {l:'Contribution Margin',v:'59.7%',s:'1 − Variable Cost Ratio'},
+          {l:'Break-Even Revenue',v:'$34.6M',s:'Fixed Costs ÷ CM Ratio'},
+        ].map(s=>`
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">${s.l}</div>
+            <div style="font-family:var(--mono);font-size:1.3rem;font-weight:600;color:var(--gold);margin:6px 0 2px">${s.v}</div>
+            <div style="font-size:11px;color:var(--dim)">${s.s}</div>
+          </div>`).join('')}
+      </div>
+      <div class="chart-wrap"><canvas id="cvrChart" height="120"></canvas></div>
+      <div class="info-banner info-gold" style="margin-top:12px">
+        <strong style="color:var(--gold)">Margin of Safety:</strong> $80.55M (actual) − $34.6M (break-even) = 
+        <strong style="color:var(--green)">$45.95M (57.1% above break-even)</strong> — 
+        Company has substantial operating cushion against revenue downturns.
+      </div>
+    </div>
+
+    <!-- Common-Size Statements -->
+    <div class="card card-p">
+      <div class="section-title">Common-Size Income Statement</div>
+      <div class="section-sub">EACH LINE AS % OF REVENUE · VERTICAL ANALYSIS</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th style="text-align:left">Line Item</th>
+            <th style="text-align:right">$K Amount</th>
+            <th style="text-align:right">% of Revenue</th>
+            <th style="text-align:right">Industry Avg</th>
+            <th style="text-align:center">vs Industry</th>
+          </tr></thead>
+          <tbody>
+            ${[
+              {n:'Revenue',v:80550,pct:100.0,ind:100.0},
+              {n:'Cost of Goods Sold',v:32523,pct:40.3,ind:55.0},
+              {n:'Gross Profit',v:48027,pct:59.7,ind:45.0},
+              {n:'Operating Expenses',v:20660,pct:25.6,ind:30.0},
+              {n:'EBIT',v:27367,pct:34.1,ind:15.0},
+              {n:'Interest & Other',v:-428,pct:-0.5,ind:-2.0},
+              {n:'Income Tax',v:-6827,pct:-8.5,ind:-3.0},
+              {n:'Net Income',v:20112,pct:24.9,ind:10.0},
+            ].map(r=>{
+              const diff=(r.pct-r.ind).toFixed(1);
+              const isIncome=['Revenue','Gross Profit','EBIT','Net Income'].includes(r.n);
+              const better=isIncome?r.pct>r.ind:r.pct<r.ind;
+              return `<tr>
+                <td style="font-weight:${['Gross Profit','EBIT','Net Income'].includes(r.n)?600:400}">${r.n}</td>
+                <td style="text-align:right;font-family:var(--mono);font-size:12px">${r.v<0?'('+Math.abs(r.v).toLocaleString()+')':r.v.toLocaleString()}</td>
+                <td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--text)">${r.pct}%</td>
+                <td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--dim)">${r.ind}%</td>
+                <td style="text-align:center">${tag(better?'green':'red',(diff>0?'+':'')+diff+'%')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+
+  // CVR Chart
+  const revPoints=[0,20000,34600,60000,80550,100000];
+  const fixedCost=20660;
+  const varCostRatio=0.403;
+  mkChart('cvrChart',{
+    type:'line',
+    data:{
+      labels:revPoints.map(v=>'$'+Math.round(v/1000)+'K'),
+      datasets:[
+        {label:'Revenue',data:revPoints,borderColor:C.green,borderWidth:2,pointRadius:3,tension:.1,fill:false},
+        {label:'Total Costs',data:revPoints.map(r=>fixedCost+r*varCostRatio),borderColor:C.red,borderWidth:2,pointRadius:3,tension:.1,fill:false},
+        {label:'Fixed Costs',data:revPoints.map(()=>fixedCost),borderColor:C.mid,borderWidth:1,pointRadius:0,tension:0,borderDash:[6,4],fill:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}},tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: $${Math.round(ctx.raw).toLocaleString()}K`}}},
+      scales:{
+        x:{ticks:tickStyle,grid:{color:'rgba(28,37,53,.6)'},border:{color:C.border}},
+        y:{ticks:{...tickStyle,callback:v=>'$'+v+'K'},grid:gridDefaults,border:{color:'transparent'}},
+      }
+    }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: FORECASTING
+═══════════════════════════════════════════════ */
+modules.forecast = function() {
+  const forecastData = Array.from({length:12},(_,i)=>({
+    m:D.months[i],
+    best: Math.round(7800*Math.pow(1.023,i)),
+    base: Math.round(7800*Math.pow(1.014,i)),
+    worst: Math.round(7800*Math.pow(1.003,i)*(1-i*.005)),
+  }));
+
+  $('#content').innerHTML = `
+  <div class="fade-up">
+    <!-- Scenario Cards -->
+    <div class="grid-3 section">
+      ${D.scenarios.map(s=>`
+        <div class="card card-p" style="border-color:${s.col}33;background:${s.col}08">
+          <div style="font-family:var(--mono);font-size:10px;color:${s.col};letter-spacing:.1em;margin-bottom:12px">${s.name.toUpperCase()}</div>
+          ${[
+            {l:'Revenue',v:'$'+Math.round(s.rev/1000*10)/10+'M'},
+            {l:'Gross Profit',v:'$'+Math.round(s.gross/1000*10)/10+'M'},
+            {l:'Net Income',v:'$'+Math.round(s.net/1000*10)/10+'M'},
+            {l:'Net Margin',v:((s.net/s.rev)*100).toFixed(1)+'%'},
+          ].map(r=>`
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:12px;color:var(--mid)">${r.l}</span>
+              <span style="font-family:var(--mono);font-size:12px">${r.v}</span>
+            </div>`).join('')}
+        </div>`).join('')}
+    </div>
+
+    <!-- Forecast Chart -->
+    <div class="card card-p section">
+      <div class="section-title">FY 2025 Revenue Forecast — Three Scenarios</div>
+      <div class="section-sub">ROLLING 12-MONTH PROJECTION · USD $K</div>
+      <div class="chart-wrap"><canvas id="forecastChart" height="180"></canvas></div>
+    </div>
+
+    <!-- Sensitivity Matrix -->
+    <div class="card card-p section">
+      <div class="section-title">Sensitivity Analysis Matrix</div>
+      <div class="section-sub">NET INCOME ($M) · REVENUE GROWTH × NET MARGIN</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="text-align:left">Rev Growth ↓ / Net Margin →</th>
+              ${['18%','21%','24%','27%','30%','33%'].map(m=>`<th class="matrix-cell">${m}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${['-15%','-10%','-5%','0%','+5%','+10%','+15%'].map((g,gi)=>{
+              const mults=[-0.15,-0.10,-0.05,0,0.05,0.10,0.15];
+              const baseRev=80550*(1+mults[gi]);
+              return `<tr>
+                <td style="font-family:var(--mono);font-size:11px;color:var(--mid)">Rev ${g}</td>
+                ${[0.18,0.21,0.24,0.27,0.30,0.33].map((m,mi)=>{
+                  const val=(baseRev*m/1000).toFixed(1);
+                  const isBase=gi===3&&mi===2;
+                  const cls=isBase?'base':parseFloat(val)>22?'high':parseFloat(val)>14?'mid-val':'low';
+                  return `<td class="matrix-cell ${cls}" style="${isBase?'':'color:'+(parseFloat(val)>22?C.green:parseFloat(val)>14?C.text:C.red)}">${isBase?'★':''} $${val}M</td>`;
+                }).join('')}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Expense Projection -->
+    <div class="card card-p">
+      <div class="section-title">Expense Projections by Category</div>
+      <div class="section-sub">FY 2025 BASE CASE · DRIVER-BASED MODEL</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="text-align:left">Expense Category</th>
+              <th style="text-align:right">FY2024 Actual</th>
+              <th style="text-align:right">FY2025 Forecast</th>
+              <th style="text-align:right">Growth Driver</th>
+              <th style="text-align:center">Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[
+              {cat:'Cost of Revenue',act:'$32,523K',fore:'$38,200K',driver:'+17.5% (revenue-driven)',type:'variable',tc:'amber'},
+              {cat:'Sales & Marketing',act:'$7,231K',fore:'$9,100K',driver:'+25.8% (growth invest.)',type:'mixed',tc:'gold'},
+              {cat:'R&D / Engineering',act:'$6,198K',fore:'$8,400K',driver:'+35.5% (product roadmap)',type:'fixed',tc:'cyan'},
+              {cat:'General & Admin',act:'$6,198K',fore:'$6,800K',driver:'+9.7% (headcount +3)',type:'fixed',tc:'purple'},
+              {cat:'Depreciation & Amort.',act:'$1,033K',fore:'$1,200K',driver:'+16.2% (capex growth)',type:'fixed',tc:'mid'},
+              {cat:'Total Operating Cost',act:'$53,183K',fore:'$63,700K',driver:'+19.8% blended',type:'total',tc:'gold'},
+            ].map(r=>`<tr>
+              <td style="font-weight:${r.type==='total'?700:400}">${r.cat}</td>
+              <td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--mid)">${r.act}</td>
+              <td style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:${r.type==='total'?700:400}">${r.fore}</td>
+              <td style="text-align:right;font-size:11px;color:var(--mid)">${r.driver}</td>
+              <td style="text-align:center">${tag(r.tc,r.type)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+
+  mkChart('forecastChart',{
+    type:'line',
+    data:{
+      labels:forecastData.map(d=>d.m),
+      datasets:[
+        {label:'Best Case',data:forecastData.map(d=>d.best),borderColor:C.green,backgroundColor:'rgba(62,207,130,.08)',fill:true,borderWidth:2,pointRadius:3,tension:.4,borderDash:[8,4]},
+        {label:'Base Case',data:forecastData.map(d=>d.base),borderColor:C.gold,backgroundColor:'rgba(200,168,75,.1)',fill:true,borderWidth:2.5,pointRadius:3,tension:.4},
+        {label:'Worst Case',data:forecastData.map(d=>d.worst),borderColor:C.red,backgroundColor:'rgba(240,82,82,.07)',fill:true,borderWidth:2,pointRadius:3,tension:.4,borderDash:[8,4]},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}},tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}K`}}},
+      scales:{
+        x:{ticks:tickStyle,grid:{color:'rgba(28,37,53,.6)'},border:{color:C.border}},
+        y:{ticks:{...tickStyle,callback:v=>'$'+v+'K'},grid:gridDefaults,border:{color:'transparent'}},
+      }
+    }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: PERFORMANCE
+═══════════════════════════════════════════════ */
+modules.performance = function() {
+  $('#content').innerHTML = `
+  <div class="fade-up">
+    <!-- Return Metrics -->
+    <div class="grid-4 section">
+      ${[
+        {l:'ROE',v:'34.2%',s:'Net Income / Avg Equity',col:C.green},
+        {l:'ROA',v:'22.8%',s:'Net Income / Avg Assets',col:C.green},
+        {l:'ROIC',v:'28.6%',s:'NOPAT / Invested Capital',col:C.green},
+        {l:'ROI (Projects)',v:'41.4%',s:'Avg across all initiatives',col:C.gold},
+      ].map(m=>`
+        <div class="kpi-card" style="text-align:center">
+          <div class="kpi-label">${m.l}</div>
+          <div style="font-family:var(--mono);font-size:2rem;font-weight:600;color:${m.col};margin:8px 0 4px">${m.v}</div>
+          <div class="kpi-meta">${m.s}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Dept Profitability -->
+    <div class="card card-p section">
+      <div class="section-title">Department Profitability Analysis</div>
+      <div class="section-sub">REVENUE · DIRECT COST · CONTRIBUTION MARGIN · HEADCOUNT</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="text-align:left">Department</th>
+              <th style="text-align:right">Revenue ($K)</th>
+              <th style="text-align:right">Direct Cost ($K)</th>
+              <th style="text-align:right">Contribution ($K)</th>
+              <th style="text-align:center">CM%</th>
+              <th style="text-align:center" class="hide-xs">HC</th>
+              <th style="text-align:right" class="hide-xs">Rev/HC ($K)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${D.departments.map(d=>`<tr>
+              <td style="font-weight:500">${d.dept}</td>
+              <td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--green)">${d.rev.toLocaleString()}</td>
+              <td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--red)">${d.cost.toLocaleString()}</td>
+              <td style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:600">${d.contrib.toLocaleString()}</td>
+              <td style="text-align:center">${tag(d.cm>=60?'green':d.cm>=40?'amber':'red',d.cm+'%')}</td>
+              <td class="hide-xs" style="text-align:center;font-family:var(--mono);font-size:12px;color:var(--mid)">${d.hc}</td>
+              <td class="hide-xs" style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--cyan)">${Math.round(d.rev/d.hc)}</td>
+            </tr>`).join('')}
+            <tr class="tbl-total">
+              <td style="color:var(--gold)">TOTAL</td>
+              <td style="text-align:right;font-family:var(--mono);color:var(--green)">80,550</td>
+              <td style="text-align:right;font-family:var(--mono);color:var(--red)">34,140</td>
+              <td style="text-align:right;font-family:var(--mono);color:var(--gold)">46,410</td>
+              <td style="text-align:center">${tag('gold','57.6%')}</td>
+              <td class="hide-xs" style="text-align:center;font-family:var(--mono);color:var(--mid)">74</td>
+              <td class="hide-xs" style="text-align:right;font-family:var(--mono);color:var(--cyan)">1,088</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid-2 section">
+      <div class="card card-p">
+        <div class="section-title">Segment Revenue vs Contribution</div>
+        <div class="section-sub">BY DEPARTMENT · FY 2024 ($K)</div>
+        <div class="chart-wrap"><canvas id="deptChart" height="220"></canvas></div>
+      </div>
+      <div class="card card-p">
+        <div class="section-title">KPI Trend — Return Metrics</div>
+        <div class="section-sub">ROE · ROA · ROIC · QUARTERLY</div>
+        <div class="chart-wrap"><canvas id="returnChart" height="220"></canvas></div>
+      </div>
+    </div>
+
+    <!-- KPI Dashboard -->
+    <div class="card card-p">
+      <div class="section-title">Balanced KPI Dashboard</div>
+      <div class="section-sub">FINANCIAL · OPERATIONAL · CUSTOMER · GROWTH METRICS</div>
+      <div class="grid-4">
+        ${[
+          {cat:'Financial',kpis:[{n:'Revenue Growth',v:'18.4%',s:'good'},{n:'EBITDA Margin',v:'41.2%',s:'good'},{n:'FCF Conversion',v:'81.6%',s:'good'}]},
+          {cat:'Operational',kpis:[{n:'Gross Margin',v:'59.7%',s:'good'},{n:'Cost per $Rev',v:'$0.40',s:'good'},{n:'OPEX Ratio',v:'25.6%',s:'good'}]},
+          {cat:'Customer',kpis:[{n:'ARR Growth',v:'28.7%',s:'good'},{n:'Net Rev Retention',v:'118%',s:'good'},{n:'CAC Payback',v:'14 mo',s:'watch'}]},
+          {cat:'Growth',kpis:[{n:'Pipeline Coverage',v:'3.4x',s:'good'},{n:'Win Rate',v:'34%',s:'watch'},{n:'Magic Number',v:'1.1',s:'good'}]},
+        ].map(g=>`
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">${g.cat}</div>
+            ${g.kpis.map(k=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:12px;color:var(--mid)">${k.n}</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-family:var(--mono);font-size:12px;font-weight:600">${k.v}</span>
+                  <div style="width:6px;height:6px;border-radius:50%;background:${k.s==='good'?C.green:k.s==='watch'?C.amber:C.red}"></div>
+                </div>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  mkChart('deptChart',{
+    type:'bar',
+    data:{
+      labels:D.departments.map(d=>d.dept.split(' ')[0]),
+      datasets:[
+        {label:'Revenue',data:D.departments.map(d=>d.rev),backgroundColor:'rgba(107,85,32,.5)',borderColor:C.goldDk,borderWidth:1,borderRadius:3},
+        {label:'Contribution',data:D.departments.map(d=>d.contrib),backgroundColor:'rgba(200,168,75,.65)',borderColor:C.gold,borderWidth:1,borderRadius:3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}},tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}K`}}},scales:{x:{ticks:tickStyle,grid:{color:'rgba(28,37,53,.6)'},border:{color:C.border}},y:{ticks:{...tickStyle,callback:v=>'$'+v+'K'},grid:gridDefaults,border:{color:'transparent'}}}}
+  });
+
+  mkChart('returnChart',{
+    type:'line',
+    data:{
+      labels:['Q1','Q2','Q3','Q4','Q1f','Q2f','Q3f','Q4f'],
+      datasets:[
+        {label:'ROE',data:[29.1,31.4,32.8,34.2,35.1,36.8,37.5,38.9],borderColor:C.green,borderWidth:2,pointRadius:4,tension:.4,fill:false},
+        {label:'ROA',data:[19.4,20.8,21.9,22.8,23.4,24.1,24.8,25.6],borderColor:C.gold,borderWidth:2,pointRadius:4,tension:.4,fill:false},
+        {label:'ROIC',data:[24.2,25.7,27.1,28.6,29.4,30.2,31.0,32.1],borderColor:C.cyan,borderWidth:2,pointRadius:4,tension:.4,fill:false},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}},tooltip:{...tooltipStyle,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}}},scales:{x:{ticks:tickStyle,grid:{color:'rgba(28,37,53,.6)'},border:{color:C.border}},y:{ticks:{...tickStyle,callback:v=>v+'%'},grid:gridDefaults,border:{color:'transparent'}}}}
+  });
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: RISK & COMPLIANCE
+═══════════════════════════════════════════════ */
+modules.risk = function() {
+  $('#content').innerHTML = `
+  <div class="fade-up">
+    <!-- Risk KPIs -->
+    <div class="grid-4 section">
+      ${[
+        {l:'Control Effectiveness',v:'94%',col:C.green,badge:'green',bv:'STRONG'},
+        {l:'Open Audit Findings',v:'3',col:C.amber,badge:'amber',bv:'MODERATE'},
+        {l:'Fraud Risk Score',v:'LOW',col:C.green,badge:'green',bv:'PASS'},
+        {l:'GAAP Compliance',v:'98.2%',col:C.green,badge:'green',bv:'COMPLIANT'},
+      ].map(s=>`
+        <div class="kpi-card">
+          <div class="kpi-label">${s.l}</div>
+          <div style="font-family:var(--mono);font-size:1.5rem;font-weight:600;color:${s.col};margin:8px 0 8px">${s.v}</div>
+          ${tag(s.badge,s.bv)}
+        </div>`).join('')}
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="card section">
+      <div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title">Audit Trail</div>
+          <div class="section-sub" style="margin-bottom:0">REAL-TIME ACTIVITY LOG WITH RISK FLAGGING</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="live-dot"></div>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">LIVE MONITORING</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="text-align:left">Timestamp</th>
+              <th style="text-align:left">User</th>
+              <th style="text-align:left">Action</th>
+              <th style="text-align:center" class="hide-xs">Module</th>
+              <th style="text-align:center">Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${D.auditLog.map(l=>`<tr>
+              <td style="font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap">${l.ts}</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--cyan)">${l.user}</td>
+              <td style="font-size:12px">${l.action}</td>
+              <td class="hide-xs" style="text-align:center">${tag('purple',l.module)}</td>
+              <td style="text-align:center">${tag(l.risk==='high'?'red':l.risk==='medium'?'amber':'green',l.risk)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Controls + Compliance Grid -->
+    <div class="grid-2 section">
+      <div class="card card-p">
+        <div class="section-title">Internal Controls Assessment</div>
+        <div class="section-sub">COSO FRAMEWORK · FIVE COMPONENTS</div>
+        ${[
+          {area:'Control Environment',score:92},{area:'Risk Assessment Process',score:88},
+          {area:'Control Activities',score:95},{area:'Information & Communication',score:87},
+          {area:'Monitoring Activities',score:91},
+        ].map(c=>{
+          const col=c.score>=90?C.green:c.score>=80?C.amber:C.red;
+          return `<div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:12.5px;color:var(--mid)">${c.area}</span>
+              <span style="font-family:var(--mono);font-size:12px;color:${col};font-weight:600">${c.score}%</span>
+            </div>
+            <div class="progress"><div class="progress-fill" style="width:${c.score}%;background:${col}"></div></div>
+          </div>`;
+        }).join('')}
+        <div class="chart-wrap" style="margin-top:16px"><canvas id="riskChart" height="200"></canvas></div>
+      </div>
+
+      <div class="card card-p">
+        <div class="section-title">GAAP / IFRS Compliance Tracker</div>
+        <div class="section-sub">STANDARD COMPLIANCE STATUS · LAST REVIEWED DEC 2024</div>
+        ${[
+          {item:'Revenue Recognition (ASC 606)',status:'compliant',date:'Oct 2024'},
+          {item:'Lease Accounting (ASC 842)',status:'compliant',date:'Oct 2024'},
+          {item:'Financial Instruments (ASC 815)',status:'compliant',date:'Nov 2024'},
+          {item:'Income Taxes (ASC 740)',status:'review',date:'Dec 2024'},
+          {item:'Segment Reporting (ASC 280)',status:'compliant',date:'Oct 2024'},
+          {item:'Fair Value Measurement (ASC 820)',status:'compliant',date:'Sep 2024'},
+          {item:'IFRS 15 Revenue Contracts',status:'compliant',date:'Oct 2024'},
+          {item:'IFRS 16 Leases',status:'watch',date:'Dec 2024'},
+          {item:'Business Combinations (ASC 805)',status:'compliant',date:'Jul 2024'},
+          {item:'Consolidation (ASC 810)',status:'compliant',date:'Aug 2024'},
+        ].map(c=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:12px;color:var(--mid)">${c.item}</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:1px">Last reviewed: ${c.date}</div>
+            </div>
+            ${tag(c.status==='compliant'?'green':c.status==='review'?'amber':'red',c.status)}
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Fraud Indicators -->
+    <div class="card card-p">
+      <div class="section-title">Fraud Detection Indicators</div>
+      <div class="section-sub">AUTOMATED MONITORING · BENFORD'S LAW · TRANSACTION PATTERNS</div>
+      <div class="grid-4">
+        ${[
+          {ind:'Benford\'s Law Test',result:'PASS',detail:'First-digit distribution normal',col:C.green},
+          {ind:'Duplicate Payments',result:'0 found',detail:'No duplicates in period',col:C.green},
+          {ind:'Round-Dollar Transactions',result:'3 flagged',detail:'Manual review required',col:C.amber},
+          {ind:'Velocity Check',result:'PASS',detail:'No unusual frequency spikes',col:C.green},
+          {ind:'Segregation of Duties',result:'PASS',detail:'No conflicts detected',col:C.green},
+          {ind:'Unusual Journal Times',result:'2 flagged',detail:'Posted outside business hours',col:C.amber},
+          {ind:'Vendor Master Changes',result:'1 flagged',detail:'Bank account changed',col:C.amber},
+          {ind:'Authorization Limits',result:'PASS',detail:'All approvals within limits',col:C.green},
+        ].map(f=>`
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px">
+            <div style="font-size:11px;font-weight:600;margin-bottom:6px">${f.ind}</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${f.col};margin-bottom:4px">${f.result}</div>
+            <div style="font-size:10px;color:var(--dim)">${f.detail}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  // Spider/Radar Chart approximation using bar
+  mkChart('riskChart',{
+    type:'radar',
+    data:{
+      labels:['Liquidity','Solvency','Profitability','Efficiency','Growth','Coverage'],
+      datasets:[
+        {label:'Company',data:[88,92,85,78,82,95],borderColor:C.gold,backgroundColor:'rgba(200,168,75,.15)',borderWidth:2,pointBackgroundColor:C.gold,pointRadius:4},
+        {label:'Benchmark',data:[70,75,65,72,68,80],borderColor:C.purple,backgroundColor:'rgba(155,127,232,.08)',borderWidth:1.5,borderDash:[5,5],pointBackgroundColor:C.purple,pointRadius:3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:C.mid,font:{family:C.mono,size:10},boxWidth:12}},tooltip:{...tooltipStyle}},
+      scales:{r:{ticks:{color:C.dim,font:{family:C.mono,size:8},backdropColor:'transparent'},grid:{color:C.border},pointLabels:{color:C.mid,font:{family:C.mono,size:10}},angleLines:{color:C.border}}},
+    }
+  });
+};
+
+/* ═══════════════════════════════════════════════════════
+   MODULE: ARCHITECTURE
+═══════════════════════════════════════════════ */
+modules.architecture = function() {
+  $('#content').innerHTML = `
+  <div class="fade-up">
+    <!-- Stack + Schema -->
+    <div class="grid-2 section">
+      <div class="card card-p arch-table">
+        <div class="section-title">Recommended Tech Stack</div>
+        <div class="section-sub">SAAS PLATFORM · PRODUCTION-GRADE</div>
+        <table class="tbl">
+          <thead><tr><th>Layer</th><th>Technology</th><th style="text-align:center">Rationale</th></tr></thead>
+          <tbody>
+            ${[
+              {l:'Frontend',t:'Next.js 14 + TypeScript + Tailwind CSS',r:'SSR/ISR, type safety, rapid UI',c:C.cyan},
+              {l:'State Management',t:'Zustand + React Query',r:'Lightweight, async data sync',c:C.cyan},
+              {l:'Charts & Viz',t:'Recharts + D3.js + Apache ECharts',r:'Complex financial charting',c:C.cyan},
+              {l:'API Layer',t:'Node.js + Fastify + GraphQL (Pothos)',r:'High-perf, typed schema-first',c:C.gold},
+              {l:'Core Engine',t:'Python + Pandas + NumPy + SQLAlchemy',r:'Numerical computation, ML-ready',c:C.gold},
+              {l:'Primary DB',t:'PostgreSQL 16 (partitioned tables)',r:'ACID, complex joins, JSON support',c:C.purple},
+              {l:'Cache Layer',t:'Redis 7 (cluster mode)',r:'Session, computed KPIs, rate limit',c:C.purple},
+              {l:'Data Warehouse',t:'Snowflake / BigQuery',r:'Analytics, historical trend queries',c:C.purple},
+              {l:'Auth & RBAC',t:'Auth0 + OPA (Open Policy Agent)',r:'SSO, fine-grained authorization',c:C.green},
+              {l:'Message Queue',t:'Apache Kafka / AWS SQS',r:'Async processing, audit events',c:C.green},
+              {l:'Infrastructure',t:'AWS EKS + Terraform + GitHub Actions',r:'IaC, auto-scaling, GitOps',c:C.amber},
+              {l:'Monitoring',t:'DataDog + Sentry + OpenTelemetry',r:'APM, error tracking, tracing',c:C.amber},
+              {l:'Security',t:'SOC 2 Type II + ISO 27001 + TLS 1.3',r:'Enterprise compliance posture',c:C.red},
+            ].map(r=>`<tr>
+              <td style="color:var(--mid);white-space:nowrap">${r.l}</td>
+              <td style="color:${r.c}">${r.t}</td>
+              <td style="font-size:10px;color:var(--dim)">${r.r}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card card-p">
+        <div class="section-title">Database Schema Design</div>
+        <div class="section-sub">CORE ENTITIES · POSTGRESQL · MULTI-TENANT</div>
+        ${[
+          {name:'tenants',cols:'id UUID PK · name TEXT · plan ENUM · fiscal_year_end DATE · base_currency CHAR(3) · settings JSONB · created_at TIMESTAMPTZ'},
+          {name:'chart_of_accounts',cols:'id UUID PK · tenant_id FK · code VARCHAR(10) · name TEXT · type ENUM(Asset,Liability,Equity,Revenue,Expense) · subtype TEXT · normal_balance ENUM · is_active BOOL · parent_id FK'},
+          {name:'accounting_periods',cols:'id UUID PK · tenant_id FK · period_start DATE · period_end DATE · fiscal_year INT · status ENUM(open,closed,locked) · closed_by FK'},
+          {name:'journal_entries',cols:'id UUID PK · tenant_id FK · entry_date DATE · description TEXT · period_id FK · posted_by FK · approved_by FK · status ENUM · audit_hash TEXT · reversal_of FK'},
+          {name:'je_lines',cols:'id UUID PK · je_id FK · account_id FK · debit NUMERIC(18,4) · credit NUMERIC(18,4) · memo TEXT · cost_center_id FK · entity_id FK · currency CHAR(3) · fx_rate NUMERIC'},
+          {name:'budgets',cols:'id UUID PK · tenant_id FK · period_id FK · account_id FK · amount NUMERIC(18,4) · scenario ENUM(best,base,worst) · version INT · created_by FK · notes TEXT'},
+          {name:'cost_centers',cols:'id UUID PK · tenant_id FK · code TEXT · name TEXT · parent_id FK · manager_id FK · department TEXT · is_active BOOL'},
+          {name:'audit_log',cols:'id UUID PK · tenant_id FK · user_id FK · action TEXT · entity_type TEXT · entity_id UUID · before_json JSONB · after_json JSONB · ip_address INET · user_agent TEXT · ts TIMESTAMPTZ'},
+        ].map(t=>`
+          <div class="schema-block">
+            <div class="schema-name">TABLE: ${t.name}</div>
+            <div class="schema-cols">${t.cols}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- API Modules -->
+    <div class="card card-p section">
+      <div class="section-title">API Module Surface</div>
+      <div class="section-sub">REST + GRAPHQL · VERSIONED · JWT-AUTHENTICATED</div>
+      <div class="grid-3">
+        ${[
+          {name:'Core Accounting Engine',col:C.gold,routes:['/v1/gl/accounts','POST /v1/gl/accounts/{id}','/v1/gl/journal-entries','POST /v1/gl/je/{id}/post','POST /v1/gl/je/{id}/reverse','/v1/gl/trial-balance','/v1/periods/{id}/close','/v1/periods/{id}/reopen']},
+          {name:'Financial Reporting',col:C.cyan,routes:['/v1/reports/balance-sheet','/v1/reports/income-statement','/v1/reports/cash-flow','/v1/reports/common-size','/v1/reports/xbrl-export','POST /v1/reports/custom','/v1/statements/notes','/v1/statements/audit-ready']},
+          {name:'Analysis Module',col:C.green,routes:['/v1/analysis/ratios','/v1/analysis/trends','/v1/analysis/breakeven','/v1/analysis/variance','/v1/analysis/working-capital','/v1/analysis/sensitivity','/v1/analysis/cvp','/v1/benchmarks/industry']},
+          {name:'Budgeting & Forecast',col:C.purple,routes:['/v1/budget/plans','POST /v1/budget/submit','/v1/forecast/rolling','/v1/forecast/scenarios','/v1/forecast/sensitivity','/v1/forecast/drivers','/v1/forecast/revenue-model','/v1/forecast/cash-flow']},
+          {name:'Performance Mgmt',col:C.amber,routes:['/v1/kpi/dashboard','/v1/kpi/returns','POST /v1/kpi/targets','/v1/departments/profitability','/v1/cost-centers/variance','/v1/performance/contribution','/v1/benchmarks/internal','/v1/scorecards/{period}']},
+          {name:'Risk & Compliance',col:C.red,routes:['/v1/audit/trail','/v1/audit/export','/v1/compliance/checks','/v1/controls/assessment','/v1/fraud/indicators','/v1/fraud/alerts','POST /v1/audit/sign-off','/v1/tax/impact-model']},
+        ].map(mod=>`
+          <div style="background:var(--surface);border:1px solid ${mod.col}33;border-radius:4px;padding:14px">
+            <div style="font-family:var(--mono);font-size:10px;color:${mod.col};margin-bottom:10px;font-weight:600">${mod.name}</div>
+            ${mod.routes.map(r=>`<div class="api-route">${r}</div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Workflow + Roadmap -->
+    <div class="grid-2 section">
+      <div class="card card-p">
+        <div class="section-title">Transaction → Reporting Workflow</div>
+        <div class="section-sub">END-TO-END FINANCIAL PROCESS FLOW</div>
+        ${[
+          {step:'01',action:'Transaction Initiated',detail:'Invoice raised, payment received, or expense incurred triggers event in source system',col:C.cyan},
+          {step:'02',action:'Journal Entry Created',detail:'Auto or manual JE created with debit/credit pairs. Validation: debits = credits, accounts exist, period open',col:C.gold},
+          {step:'03',action:'Approval Workflow',detail:'JE routed for approval based on amount thresholds and authorization matrix. Audit hash generated',col:C.amber},
+          {step:'04',action:'Posted to General Ledger',detail:'Approved JE posts to GL, updates account balances in real-time. Period lock enforced',col:C.purple},
+          {step:'05',action:'Trial Balance Updated',detail:'TB auto-refreshes. System validates balanced equation: Total Debits = Total Credits',col:C.green},
+          {step:'06',action:'Financial Statements Generated',detail:'BS, IS, CF statements auto-generated from TB. GAAP/IFRS adjustments applied',col:C.green},
+          {step:'07',action:'Analytics & KPIs Computed',detail:'Ratios, variances, forecasts refreshed. Dashboard KPIs updated. Alerts triggered if thresholds breached',col:C.gold},
+          {step:'08',action:'Period Close & Audit Pack',detail:'Automated checklist, XBRL tagging, audit trail export, digital sign-off, permanent record stored',col:C.red},
+        ].map((s,i)=>`
+          <div style="display:flex;gap:12px;padding:9px 0;border-bottom:${i<7?'1px solid var(--border)':'none'}">
+            <div style="font-family:var(--mono);font-size:10px;color:${s.col};min-width:24px;margin-top:1px">${s.step}</div>
+            <div>
+              <div style="font-size:12.5px;font-weight:600;margin-bottom:2px">${s.action}</div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.5">${s.detail}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div class="card card-p">
+        <div class="section-title">Product Expansion Roadmap</div>
+        <div class="section-sub">4-PHASE SAAS PLATFORM EVOLUTION</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          ${[
+            {phase:'Phase 1 · Q1 2025',title:'Core Foundation',col:'#3ecf82',items:['Multi-currency GL with FX revaluation','XBRL / iXBRL export compliance','Automated bank reconciliation','Multi-level approval workflows','Period-end close automation']},
+            {phase:'Phase 2 · Q2 2025',title:'AI Intelligence Layer',col:'#4db8f0',items:['AI-powered anomaly detection (ML model)','Natural language financial Q&A (LLM)','Auto-categorization of transactions','Predictive cash flow forecasting','Smart variance commentary generation']},
+            {phase:'Phase 3 · Q3 2025',title:'Enterprise Integration',col:'#c8a84b',items:['ERP connectors: SAP S/4HANA, NetSuite, Oracle','Open Banking API (PSD2 / Plaid)','Payment gateway (Stripe, Brex, Bill.com)','HRIS & payroll integration (Workday, ADP)','E-commerce platform connectors']},
+            {phase:'Phase 4 · Q4 2025',title:'Enterprise-Grade Consolidation',col:'#9b7fe8',items:['Multi-entity financial consolidation engine','Intercompany elimination automation','Segment reporting by legal entity','Board pack & investor report automation','Transfer pricing documentation module']},
+          ].map(p=>`
+            <div class="roadmap-phase" style="border-color:${p.col}44;background:${p.col}06">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:4px">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">${p.phase}</div>
+                <div style="font-size:12px;font-weight:600;color:${p.col}">${p.title}</div>
+              </div>
+              ${p.items.map(item=>`<div class="roadmap-item"><span class="roadmap-arrow" style="color:${p.col}">→</span>${item}</div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Scalability Considerations -->
+    <div class="card card-p">
+      <div class="section-title">Scalability & Architecture Considerations</div>
+      <div class="section-sub">MULTI-TENANT SAAS · ENTERPRISE-GRADE DESIGN PRINCIPLES</div>
+      <div class="grid-4">
+        ${[
+          {title:'Multi-tenancy',col:C.cyan,points:['Row-level security (RLS) in PostgreSQL','Tenant-scoped API keys & JWT claims','Schema-per-tenant option for enterprise','Isolated compute for large tenants']},
+          {title:'Performance',col:C.green,points:['Materialized views for financial aggregations','Partition GL tables by tenant + period','Redis cache for dashboard KPIs (TTL 5min)','Read replicas for reporting workloads']},
+          {title:'Data Integrity',col:C.gold,points:['Immutable audit log (append-only table)','Cryptographic hash chaining on JEs','Double-entry validation at DB level','Period lock enforced by stored procedures']},
+          {title:'Security',col:C.red,points:['Encryption at rest (AES-256) & in transit','Field-level encryption for PII / financial data','SOC 2 Type II annual certification','Penetration testing every 6 months']},
+        ].map(g=>`
+          <div style="background:var(--surface);border:1px solid ${g.col}33;border-radius:4px;padding:14px">
+            <div style="font-family:var(--mono);font-size:10px;color:${g.col};margin-bottom:10px;font-weight:600">${g.title.toUpperCase()}</div>
+            ${g.points.map(p=>`<div style="font-size:11.5px;color:var(--mid);padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:6px"><span style="color:${g.col};flex-shrink:0">·</span>${p}</div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+};
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.color = '#3d5068';
+navigate('dashboard');
+</script>
+</body>
+</html>
