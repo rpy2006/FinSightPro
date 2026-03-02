@@ -58,3 +58,113 @@
 │ │ (Primary) │ │ (Time-series│ │ (Cache/Queue) │ │
 │ └─────────────┘ └─────────────┘ └─────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
+
+
+## 💻 Technology Stack
+
+### Frontend
+- **Framework**: React 18 / Next.js 14
+- **State Management**: Redux Toolkit / Zustand
+- **Styling**: Tailwind CSS + CSS Modules
+- **Charts**: Chart.js 4 / D3.js
+- **Forms**: React Hook Form + Zod validation
+- **API Client**: GraphQL (Apollo) / REST (Axios)
+- **Build Tool**: Vite / Webpack 5
+
+### Backend
+- **API Framework**: Python FastAPI / Node.js NestJS
+- **Authentication**: JWT + OAuth2
+- **Validation**: Pydantic / Zod
+- **Task Queue**: Celery / BullMQ
+- **Real-time**: WebSocket / Socket.io
+
+### Database
+- **Primary Database**: PostgreSQL 16+
+- **Time-series Database**: TimescaleDB
+- **Caching**: Redis 7+
+- **Search**: Elasticsearch (optional)
+- **Message Broker**: RabbitMQ / Kafka
+
+### Infrastructure
+- **Cloud**: AWS / Azure / GCP
+- **Container**: Docker + Kubernetes
+- **CI/CD**: GitHub Actions / GitLab CI
+- **Monitoring**: Prometheus + Grafana
+- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
+
+---
+
+## 📊 Database Schema Design
+
+### Core Tables Structure
+
+```sql
+-- Chart of Accounts
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL,
+    account_code VARCHAR(20) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    type ENUM('asset', 'liability', 'equity', 'revenue', 'expense') NOT NULL,
+    subtype VARCHAR(50),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(company_id, account_code)
+);
+
+-- Journal Entries
+CREATE TABLE journal_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL,
+    entry_number VARCHAR(50) UNIQUE NOT NULL,
+    entry_date DATE NOT NULL,
+    description TEXT,
+    status ENUM('draft', 'approved', 'posted') DEFAULT 'draft',
+    created_by UUID,
+    approved_by UUID,
+    posted_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Journal Lines (Double-entry)
+CREATE TABLE journal_lines (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    journal_entry_id UUID REFERENCES journal_entries(id),
+    account_id UUID REFERENCES accounts(id),
+    line_type ENUM('debit', 'credit') NOT NULL,
+    amount DECIMAL(19,4) NOT NULL,
+    memo TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Budgets
+CREATE TABLE budgets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    fiscal_year_start DATE NOT NULL,
+    fiscal_year_end DATE NOT NULL,
+    type ENUM('operational', 'capital') DEFAULT 'operational',
+    status ENUM('draft', 'active', 'archived') DEFAULT 'draft'
+);
+
+-- Forecast Scenarios
+CREATE TABLE scenarios (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_id UUID NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    assumptions JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Audit Trail
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    table_name VARCHAR(50) NOT NULL,
+    record_id UUID NOT NULL,
+    action ENUM('INSERT', 'UPDATE', 'DELETE') NOT NULL,
+    old_data JSONB,
+    new_data JSONB,
+    changed_by UUID,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
