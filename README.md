@@ -7,7 +7,7 @@
 [![IFRS Ready](https://img.shields.io/badge/IFRS-Ready-blue)](https://www.ifrs.org/)
 
 <p align="center">
-  <img src="https://via.placeholder.com/800x400/0f2b4b/ffffff?text=FinSight+Pro+Dashboard" alt="FinSight Pro Dashboard" width="800"/>
+  <img src="https://ibb.co/d4d9SWyh" alt="FinSight Pro Dashboard" width="800"/>
 </p>
 
 ## 📋 Overview
