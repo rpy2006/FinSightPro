@@ -550,6 +550,7 @@ MIT License - see LICENSE file for details.
 📧 Contact & Support
 
 · Live Demo: https://rpy2006.github.io/FinSightPro/
+
 · Documentation: https://rohitbhai.xo.je/
 
 · Issues: GitHub Issues
