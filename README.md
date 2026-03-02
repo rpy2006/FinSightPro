@@ -1,4 +1,4 @@
-```text
+
 # FinSight Pro — Enterprise Financial Analysis & Management System
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-FinSightPro-blue?style=for-the-badge)](https://rpy2006.github.io/FinSightPro/)
