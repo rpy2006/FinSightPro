@@ -550,9 +550,9 @@ MIT License - see LICENSE file for details.
 📧 Contact & Support
 
 · Live Demo: https://rpy2006.github.io/FinSightPro/
-· Documentation: https://docs.finsightpro.com
+· Documentation: https://rohitbhai.xo.je/
 · Issues: GitHub Issues
-· Email: support@finsightpro.com
+· Email: rohitprasadyadav06@gmail.com
 
 ---
 
@@ -574,18 +574,3 @@ MIT License - see LICENSE file for details.
 </p>
 ```
 
-This is the complete README.txt file content. You can copy this entire text and save it as README.md or README.txt for your project. The file includes:
-
-1. Complete project documentation with all modules
-2. System architecture diagrams in ASCII
-3. Technology stack details
-4. Database schema with SQL
-5. Core algorithms in multiple languages
-6. API endpoints structure
-7. Installation instructions
-8. Testing commands
-9. Dashboard visualization
-10. Compliance information
-11. Future roadmap
-12. Contributing guidelines
-13. License and contact information
